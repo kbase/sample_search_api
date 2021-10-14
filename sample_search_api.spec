@@ -2,6 +2,16 @@
 A KBase module: sample_search_api
 */
 
+/*
+
+TODO:
+    Ontology type queries
+    more complex lexicographical queries (nested or paranthesis)
+
+*/
+
+
+
 module sample_search_api {
 
 
@@ -15,21 +25,21 @@ module sample_search_api {
 
     /*
     Args:
+
+        paren_position -
+            None - no operation
+            1 - 
+            2 - add two open paranthesis
+            -1 - 
+            -2 - closed paranthesis
+
         metadata_field - should only be a controlled_metadata field, if not will error.
         operator - suppported values for the operators are
-            "=", "==", "equals", "equal", "is"
-            "!=", "not equals", "does not equal", "is not"
-            "<", "less than"
-            ">", "greater than"
-            ">=", "greater than or equal to"
-            "<=", "less than or equal to"
-            "in", "is in"
-            "not in", "is not in"
-            note: each of the values in the above lines evaluates to the same python operator (which corresponds to the first value).
+            "==", "!=", "<", ">", ">=", "<=", "in", "not in"
         metadata_value - value on which to constrain metadata_field with the input operator.
         join_condition - accepted values for the operators are:
-        "and", "&", "&&"
-        "or", "|", "||"
+            "and", "or"
+
     */
 
     typedef structure{
