@@ -5,7 +5,7 @@ from utils.re_utils import execute_query
 from utils.parsing_and_formatting import (
     parse_input,
     parse_field,
-    parse_value,
+    parse_values,
     parse_operator,
     parse_join,
     field_value_formatting
@@ -14,6 +14,8 @@ from utils.parsing_and_formatting import (
 SAMPLE_NODE_COLLECTION = "samples_nodes"
 SAMPLE_SAMPLE_COLLECTION = "samples_sample"
 
+# AQL = Arango Query Languages
+# double curly braces "{{}}" are used to create string literal curly braces "{}"
 AQL_query_template = f"""
 let version_ids = (for sample_id in @sample_ids
     let doc = DOCUMENT({SAMPLE_SAMPLE_COLLECTION}, sample_id.id)
@@ -41,16 +43,14 @@ class SampleFilterer():
         cls.re_admin_token = ctx.get('token')
 
     def filter_samples(self, params):
-        samples = parse_input(params)
+        samples, filter_conditions = parse_input(params)
         # AQL = Arango Query Languages
-        # double curly braces "{{}}" are used to create string literal curly braces "{}"
         AQL_query = AQL_query_template
         query_params = {"sample_ids": samples, 'num_sample_ids': len(samples)}
-        filter_conditions = params.get('filter_conditions', [])
         num_filters = len(filter_conditions)
         parsed_filters = [{
             'field': parse_field(fc.get('metadata_field'), idx),
-            'value': parse_value(fc.get('metadata_value'), idx),
+            'values': parse_values(fc.get('metadata_values'), idx),
             'operator': parse_operator(fc.get('operator'), idx),
             'join': parse_join(fc.get('join_condition'), idx, num_filters)
         } for idx, fc in enumerate(filter_conditions)]
@@ -89,9 +89,13 @@ class SampleFilterer():
         '''
         field = formatted_filter.get('field')
         operator = formatted_filter.get('operator')
+        values = formatted_filter.get('values')
         AQL_query = f"node.meta.{field}.value {operator} @value{idx}"
+        # if there is one value in the list of values, flatten to just the value.
+        if len(values) == 1:
+            values = values[0]
         filter_params = {
-            f"value{idx}": formatted_filter.get('value')
+            f"value{idx}": values
         }
         return AQL_query, filter_params
 
