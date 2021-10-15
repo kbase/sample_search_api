@@ -44,10 +44,10 @@ for node in node_metas
 class SampleFilterer():
     '''
     '''
-    def __init__(cls, ctx, re_api_url, sample_service):
+    def __init__(cls, re_admin_token, re_api_url, sample_service):
         cls.re_api_url = re_api_url
         cls.sample_service = sample_service
-        cls.re_admin_token = ctx.get('token')  # needs to be a env/config variable
+        cls.re_admin_token = re_admin_token
 
     def filter_samples(self, params):
         samples, filter_conditions = parse_input(params)

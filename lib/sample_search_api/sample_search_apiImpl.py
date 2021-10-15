@@ -36,16 +36,18 @@ class sample_search_api:
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.callback_url = os.environ['SDK_CALLBACK_URL']
-        # self.re_api_url = config.get(
-        #   're-api-url',
-        #   config.get('kbase-endpoint') + '/relation_engine_api'
-        # )
-        self.re_api_url = config.get('kbase-endpoint') + '/relation_engine_api'
+        re_api_url = config.get(
+          're-api-url',
+          config.get('kbase-endpoint') + '/relation_engine_api'
+        )
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
-        print('sample service url', self.sample_url)
-
         self.shared_folder = config['scratch']
         self.sample_service = SampleService(self.sample_url)
+        self.sample_filter = SampleFilterer(
+          config.get('re-admin-token'),
+          re_api_url,
+          self.sample_service
+        )
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
         #END_CONSTRUCTOR
@@ -77,8 +79,7 @@ class sample_search_api:
         # ctx is the context object
         # return variables are: results
         #BEGIN filter_samples
-        sf = SampleFilterer(ctx, self.re_api_url, self.sample_service)
-        results = sf.filter_samples(params)
+        results = self.sample_filter.filter_samples(params)
         #END filter_samples
 
         # At some point might do deeper type checking...
