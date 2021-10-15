@@ -26,10 +26,10 @@ module sample_search_api {
     /*
     Args:
         metadata_field - should only be a controlled_metadata field, if not will error.
-        operator - suppported values for the operators are
+        comparison_operator - suppported values for the operators are
             "==", "!=", "<", ">", ">=", "<=", "in", "not in"
         metadata_values - list of values on which to constrain metadata_field with the input operator.
-        join_condition - accepted values for the operators are:
+        logical_operator - accepted values for the operators are:
             "and", "or"
 
     potential future args:
@@ -43,9 +43,9 @@ module sample_search_api {
 
     typedef structure{
         string metadata_field;
-        string operator;
+        string comparison_operator;
         list<string> metadata_values;
-        string join_condition;
+        string logical_operator;
     } filter_condition;
 
     typedef structure{

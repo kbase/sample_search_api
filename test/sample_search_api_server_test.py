@@ -67,6 +67,28 @@ class sample_search_apiTest(unittest.TestCase):
             print('Test workspace was deleted')
 
     # @unittest.skip('x')
+    def test_filter_with_one_condition_and_value_has_whitespace(self):
+        # NOTE: this filter should not filter any samples out
+        params = {
+            'workspace_name': self.wsName,
+            'sample_ids': self.valid_sample_ids,
+            'filter_conditions': [{
+                'metadata_field': "name",
+                'comparison_operator': "!=",
+                'metadata_values': ["    this has spaces and thats okay!  "]
+            }]
+        }
+        start = time.time()
+        ret = self.serviceImpl.filter_samples(
+            self.ctx,
+            params
+        )[0]
+        end = time.time()
+        self.assertEqual(len(ret['sample_ids']),7)
+        self.assertEqual(ret['sample_ids'], self.valid_sample_ids)
+        print(f'filter samples test_filter_with_one_condition_and_value_has_whitespace takes {end - start} seconds to run')
+
+    # @unittest.skip('x')
     def test_multi_condition_filter_from_same_sample_set(self):
         # retrieve a list of samples
         params = {
@@ -75,20 +97,20 @@ class sample_search_apiTest(unittest.TestCase):
             'filter_conditions': [
                 {
                     'metadata_field': "latitude",
-                    'operator': ">",
+                    'comparison_operator': ">",
                     'metadata_values': ["0.0"],
-                    'join_condition': "AND"
+                    'logical_operator': "AND"
                 },
                 {
                     'metadata_field': "longitude",
-                    'operator': ">",
+                    'comparison_operator': ">",
                     'metadata_values': ["0.0"],
-                    'join_condition': "OR"
+                    'logical_operator': "OR"
                 },
                 {
                     'metadata_field': "state_province",
-                    'operator': "==",
-                    'metadata_values': ["Georgia"],
+                    'comparison_operator': "==",
+                    'metadata_values': ["Georgia"]
                 }
             ]
         }
@@ -116,7 +138,7 @@ class sample_search_apiTest(unittest.TestCase):
             'filter_conditions': [
                 {
                     'metadata_field': "state_province",
-                    'operator': "in",
+                    'comparison_operator': "in",
                     'metadata_values': ["Georgia", "Washington", "Tennessee"],
                 }
             ]
@@ -145,9 +167,9 @@ class sample_search_apiTest(unittest.TestCase):
             'filter_conditions': [
                 {
                     'metadata_field': "latitude",
-                    'operator': ">",
+                    'comparison_operator': ">",
                     'metadata_values': ["0.0"],
-                    'join_condition': "AND"
+                    'logical_operator': "AND"
                 }
             ]
         }
@@ -180,28 +202,76 @@ class sample_search_apiTest(unittest.TestCase):
 
     # @unittest.skip('x')
     def test_non_metadata_field(self):
-        pass
+        fake_field = "kachow!"
+        params = {
+            'workspace_name': self.wsName,
+            'sample_ids': self.valid_sample_ids,
+            'filter_conditions': [{
+                'metadata_field': fake_field,
+                'comparison_operator': "==",
+                'metadata_values': ["value"],
+                'logical_operator': "AND"
+            }]
+        }
+        with self.assertRaises(Exception) as context:
+            _ = self.serviceImpl.filter_samples(
+                self.ctx,
+                params
+            )
+        self.assertEqual(
+            f"Sample service error code 30001 Illegal input parameter: No such metadata key: {fake_field}",
+            str(context.exception)
+        )
 
     # @unittest.skip('x')
-    def test_too_many_values_for_operator(self):
-        pass
+    def test_too_many_values_for_comparison_operator(self):
+        params = {
+            'workspace_name': self.wsName,
+            'sample_ids': self.valid_sample_ids,
+            'filter_conditions': [{
+                'metadata_field': "latitude",
+                'comparison_operator': "==",
+                'metadata_values': ["30.023", "45.03"],
+                'logical_operator': "AND"
+            }]
+        }
+        with self.assertRaises(ValueError) as context:
+            _ = self.serviceImpl.filter_samples(
+                self.ctx,
+                params
+            )
+        self.assertEqual(
+            "Provided comparison operator '==' expects 1 value, 2 values were provided.",
+            str(context.exception)
+        )
 
     # @unittest.skip('x')
-    def test_non_accepted_operator_for_field_type(self):
-        pass
+    def test_non_accepted_comparison_operator_for_field_type(self):
+        params = {
+            'workspace_name': self.wsName,
+            'sample_ids': self.valid_sample_ids,
+            'filter_conditions': [{
+                'metadata_field': "state_province",
+                'comparison_operator': ">",
+                'metadata_values': ["Georgia"],
+                'logical_operator': "AND"
+            }]
+        }
+        with self.assertRaises(ValueError) as context:
+            _ = self.serviceImpl.filter_samples(
+                self.ctx,
+                params
+            )
+        self.assertEqual(
+            "provided operator '>' not accepted for metadata field 'state_province' in filter condition at position 0.",
+            str(context.exception)
+        )
 
-    # @unittest.skip('x')
-    def test_(self):
-        pass
-
-    # @unittest.skip('x')
-    def test_value_has_whitespace(self):
-        pass
-
-    # @unittest.skip('x')
+    @unittest.skip('not implemented')
     def test_catch_injection(self):
         # Should build out framework for this more effectively.
         # Perhaps we don't have to worry because RE is read_only
+        # and 'value' field is provided as @value for AQL query.
         pass
 
     # @unittest.skip('x')
@@ -210,24 +280,27 @@ class sample_search_apiTest(unittest.TestCase):
         # here we test the validation functionality
         ret = sf._validate_filters([
             {'field': 'name',  # string validator
-                'operator': '==','values': ['foo'],'join': 'and'},
-            {'field': 'latitude',  # number validator
-                'operator': ">=",'values': ["45.046"],'join': "or"},
+                'comp_op': '==','values': ['foo'],'logic_op': 'and'},
+            {'field': 'latitude',  # number (float) validator
+                'comp_op': ">=",'values': ["45.046"],'logic_op': "or"},
+            {'field': 'longitude',  # number (int) validator
+                'comp_op': ">=",'values': ["35"],'logic_op': "or"},
             {'field': 'sesar:material',  # enum validator
-                'operator': "!=",'values': ['Sediment'],'join': 'or'},
+                'comp_op': "!=",'values': ['Sediment'],'logic_op': 'or'},
             {'field': 'biome',  # ontology_has_ancestor validator
-                'operator': "==",'values': ['ENVO:00000001'],'join': 'and'},
+                'comp_op': "==",'values': ['ENVO:00000001'],'logic_op': 'and'},
             {'field': 'city_township',  # noop validator
-                'operator': "IN",'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
+                'comp_op': "IN",'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
         ])
-        self.assertEqual(len(ret), 5)
+        self.assertEqual(len(ret), 6)
         # we only expect the number validtor to be transformed
         expected_ret = [
-            {'field': 'name', 'operator': '==', 'values': ['foo'], 'join': 'and'},
-            {'field': 'latitude', 'operator': '>=', 'values': [45.046], 'join': 'or'},
-            {'field': 'sesar:material', 'operator': '!=', 'values': ['Sediment'], 'join': 'or'},
-            {'field': 'biome', 'operator': '==', 'values': ['ENVO:00000001'], 'join': 'and'},
-            {'field': 'city_township', 'operator': 'IN', 'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
+            {'field': 'name', 'comp_op': '==', 'values': ['foo'], 'logic_op': 'and'},
+            {'field': 'latitude', 'comp_op': '>=', 'values': [45.046], 'logic_op': 'or'},
+            {'field': 'longitude', 'comp_op': '>=', 'values': [35], 'logic_op': 'or'},
+            {'field': 'sesar:material', 'comp_op': '!=', 'values': ['Sediment'], 'logic_op': 'or'},
+            {'field': 'biome', 'comp_op': '==', 'values': ['ENVO:00000001'], 'logic_op': 'and'},
+            {'field': 'city_township', 'comp_op': 'IN', 'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
         ]
         self.assertEqual(ret, expected_ret)
 

@@ -6,8 +6,8 @@ from utils.parsing_and_formatting import (
     parse_input,
     parse_field,
     parse_values,
-    parse_operator,
-    parse_join,
+    parse_comparison_operator,
+    parse_logical_operator,
     field_value_formatting
 )
 
@@ -40,7 +40,7 @@ class SampleFilterer():
     def __init__(cls, ctx, re_api_url, sample_service):
         cls.re_api_url = re_api_url
         cls.sample_service = sample_service
-        cls.re_admin_token = ctx.get('token')
+        cls.re_admin_token = ctx.get('token')  # needs to be a env/config variable
 
     def filter_samples(self, params):
         samples, filter_conditions = parse_input(params)
@@ -51,24 +51,24 @@ class SampleFilterer():
         parsed_filters = [{
             'field': parse_field(fc.get('metadata_field'), idx),
             'values': parse_values(fc.get('metadata_values'), idx),
-            'operator': parse_operator(fc.get('operator'), idx),
-            'join': parse_join(fc.get('join_condition'), idx, num_filters)
+            'comp_op': parse_comparison_operator(fc.get('comparison_operator'), idx),
+            'logic_op': parse_logical_operator(fc.get('logical_operator'), idx, num_filters)
         } for idx, fc in enumerate(filter_conditions)]
         formatted_filters = self._validate_filters(parsed_filters)
         for idx, formatted_filter in enumerate(formatted_filters):
             query_constraint, filter_params = self._construct_filter(
                 formatted_filter, idx
             )
-            join = formatted_filter.get('join')
+            logic_op = formatted_filter.get('logic_op')
             query_params.update(filter_params)
             if idx+1 < num_filters:
-                AQL_query += query_constraint + f" {join} "
+                AQL_query += query_constraint + f" {logic_op} "
             else:
-                # the final join statement is ignored
+                # the final logical operator statement is ignored
                 AQL_query += query_constraint
 
         AQL_query += """
-        RETURN {"id": node.id, "version": node.version, "meta": node.meta}
+        RETURN {"id": node.id, "version": node.version}
         """
         results = execute_query(
             AQL_query,
@@ -84,15 +84,14 @@ class SampleFilterer():
     def _construct_filter(self, formatted_filter, idx):
         '''
         formatted_filter must contain the following parameters:
-            'field', 'operator',
-            'value', 'join_condition'
+            'field', 'comparison_operator', 'value', 'logical_operator'
         '''
         field = formatted_filter.get('field')
-        operator = formatted_filter.get('operator')
+        comp_op = formatted_filter.get('comp_op')
         values = formatted_filter.get('values')
-        AQL_query = f"node.meta.{field}.value {operator} @value{idx}"
+        AQL_query = f"node.meta.{field}.value {comp_op} @value{idx}"
         # if there is one value in the list of values, flatten to just the value.
-        if len(values) == 1:
+        if len(values) == 1 and comp_op not in ["IN", "NOT IN"]:
             values = values[0]
         filter_params = {
             f"value{idx}": values
@@ -106,9 +105,9 @@ class SampleFilterer():
                 'prefix': 0,  # expects these not to be prefix validated.
                 'keys': set([pf['field'] for pf in parsed_filters])
             })['static_metadata']
-        except error:
-            # may require a better message later.
-            raise error
+        except Exception as error:
+            # may require a better handling.
+            raise ValueError(error.message)
         formatted_filters = []
         for idx, parsed_filter in enumerate(parsed_filters):
             stat_meta = static_metadata.get(parsed_filter.get('field'))
