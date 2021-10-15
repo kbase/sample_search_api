@@ -2,7 +2,6 @@
 #BEGIN_HEADER
 import logging
 import os
-import json
 
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.SampleServiceClient import SampleService
@@ -37,7 +36,10 @@ class sample_search_api:
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.callback_url = os.environ['SDK_CALLBACK_URL']
-        # self.re_api_url = config.get('re-api-url', config.get('kbase-endpoint') + '/relation_engine_api')
+        # self.re_api_url = config.get(
+        #   're-api-url',
+        #   config.get('kbase-endpoint') + '/relation_engine_api'
+        # )
         self.re_api_url = config.get('kbase-endpoint') + '/relation_engine_api'
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
         print('sample service url', self.sample_url)
@@ -48,7 +50,6 @@ class sample_search_api:
                             level=logging.INFO)
         #END_CONSTRUCTOR
         pass
-
 
     def filter_samples(self, ctx, params):
         """
@@ -86,6 +87,7 @@ class sample_search_api:
                              'results is not type dict as required.')
         # return the results
         return [results]
+
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

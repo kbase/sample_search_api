@@ -221,7 +221,8 @@ class sample_search_apiTest(unittest.TestCase):
                 params
             )
         self.assertEqual(
-            f"Sample service error code 30001 Illegal input parameter: No such metadata key: {fake_field}",
+            "Sample service error code 30001 Illegal input "
+            f"parameter: No such metadata key: {fake_field}",
             str(context.exception)
         )
 

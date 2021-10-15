@@ -1,6 +1,4 @@
 # Primary file for filtering samples workflows
-import time
-
 from utils.re_utils import execute_query
 from utils.parsing_and_formatting import (
     parse_input,
@@ -33,6 +31,7 @@ let node_metas = (for version_id in version_ids
 )
 for node in node_metas
     FILTER """
+
 
 class SampleFilterer():
     '''
@@ -99,7 +98,10 @@ class SampleFilterer():
         return AQL_query, filter_params
 
     def _validate_filters(self, parsed_filters):
-        '''The SampleService will error here if the metadata field is not found as an accepted controlled metadata field'''
+        '''
+        The SampleService will error here if the metadata field 
+        is not found as an accepted controlled metadata field
+        '''
         try:
             static_metadata = self.sample_service.get_metadata_key_static_metadata({
                 'prefix': 0,  # expects these not to be prefix validated.
