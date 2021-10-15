@@ -13,16 +13,13 @@ import requests
 
 _ADB_KEY_DISALLOWED_CHARS_REGEX = re.compile(r"[^a-zA-Z0-9_\-:\.@\(\)\+,=;\$!\*'%]")
 
+
 def clean_key(key):
     """
     Swaps disallowed characters for an ArangoDB '_key' with an underscore.
     See https://www.arangodb.com/docs/stable/data-modeling-naming-conventions-document-keys.html
     """
     return _ADB_KEY_DISALLOWED_CHARS_REGEX.sub('_', key)
-
-
-def secure_input():
-    pass
 
 
 def get_doc(coll, key, re_api_url, token):
@@ -32,7 +29,7 @@ def get_doc(coll, key, re_api_url, token):
         data=json.dumps({
             'query': "for v in @@coll filter v._key == @key limit 1 return v",
             '@coll': coll,
-            'key': key
+            'key': clean_key(key)
         }),
         headers={'Authorization': token}
     )

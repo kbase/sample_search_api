@@ -61,7 +61,7 @@ class SampleFilterer():
             )
             logic_op = formatted_filter.get('logic_op')
             query_params.update(filter_params)
-            if idx+1 < num_filters:
+            if idx + 1 < num_filters:
                 AQL_query += query_constraint + f" {logic_op} "
             else:
                 # the final logical operator statement is ignored

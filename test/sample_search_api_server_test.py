@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
 import time
-import json
 import unittest
 from configparser import ConfigParser
 
@@ -84,9 +83,10 @@ class sample_search_apiTest(unittest.TestCase):
             params
         )[0]
         end = time.time()
-        self.assertEqual(len(ret['sample_ids']),7)
+        self.assertEqual(len(ret['sample_ids']), 7)
         self.assertEqual(ret['sample_ids'], self.valid_sample_ids)
-        print(f'filter samples test_filter_with_one_condition_and_value_has_whitespace takes {end - start} seconds to run')
+        print('filter samples test_filter_with_one_condition_and_value_has_whitespace takes '
+              f'{end - start} seconds to run')
 
     # @unittest.skip('x')
     def test_multi_condition_filter_from_same_sample_set(self):
@@ -121,13 +121,14 @@ class sample_search_apiTest(unittest.TestCase):
         )[0]
         end = time.time()
         self.assertEqual(len(ret['sample_ids']), 4)
-        self.assertEqual([{"id": s['id'], "version": s['version']} for s in ret['sample_ids']],[
+        self.assertEqual([{"id": s['id'], "version": s['version']} for s in ret['sample_ids']], [
             {'id': 'c9daec72-348e-426b-bef6-04bcdd0e01fa', 'version': 1},
             {'id': 'efffc90e-64bb-48fb-97c9-c2db3f37f7fc', 'version': 1},
             {'id': '3d108e8a-d583-4aa4-a2b8-0ae592abf066', 'version': 1},
             {'id': 'b969c622-ea18-4dda-9943-bf1692e526dd', 'version': 1}
         ])
-        print(f'filter samples test_multi_condition_filter_from_same_sample_set takes {end - start} seconds to run')
+        print('filter samples test_multi_condition_filter_from_same_sample_set '
+              f'takes {end - start} seconds to run')
 
     # @unittest.skip('x')
     def test_multi_value_filter_condition(self):
@@ -150,14 +151,15 @@ class sample_search_apiTest(unittest.TestCase):
         )[0]
         end = time.time()
         self.assertEqual(len(ret['sample_ids']), 5)
-        self.assertEqual([{"id": s['id'], "version": s['version']} for s in ret['sample_ids']],[
+        self.assertEqual([{"id": s['id'], "version": s['version']} for s in ret['sample_ids']], [
             {'id': 'c9daec72-348e-426b-bef6-04bcdd0e01fa', 'version': 1},
             {'id': 'efffc90e-64bb-48fb-97c9-c2db3f37f7fc', 'version': 1},
             {'id': '1cd59e35-9057-427b-9b88-17077a5810e4', 'version': 1},
             {'id': '6fc28cbd-39b3-4da6-a928-e56a680111b7', 'version': 1},
             {'id': '3f272ea3-6e52-4e09-b5c5-525217ac5a49', 'version': 1}
         ])
-        print(f'filter test_multi_value_filter_condition samples takes {end - start} seconds to run')
+        print('filter test_multi_value_filter_condition samples '
+              f'takes {end - start} seconds to run')
 
     # @unittest.skip('x')
     def test_not_enough_samples(self):
@@ -263,7 +265,8 @@ class sample_search_apiTest(unittest.TestCase):
                 params
             )
         self.assertEqual(
-            "provided operator '>' not accepted for metadata field 'state_province' in filter condition at position 0.",
+            "provided operator '>' not accepted for metadata "
+            "field 'state_province' in filter condition at position 0.",
             str(context.exception)
         )
 
@@ -280,17 +283,17 @@ class sample_search_apiTest(unittest.TestCase):
         # here we test the validation functionality
         ret = sf._validate_filters([
             {'field': 'name',  # string validator
-                'comp_op': '==','values': ['foo'],'logic_op': 'and'},
+                'comp_op': '==', 'values': ['foo'], 'logic_op': 'and'},
             {'field': 'latitude',  # number (float) validator
-                'comp_op': ">=",'values': ["45.046"],'logic_op': "or"},
+                'comp_op': ">=", 'values': ["45.046"], 'logic_op': "or"},
             {'field': 'longitude',  # number (int) validator
-                'comp_op': ">=",'values': ["35"],'logic_op': "or"},
+                'comp_op': ">=", 'values': ["35"], 'logic_op': "or"},
             {'field': 'sesar:material',  # enum validator
-                'comp_op': "!=",'values': ['Sediment'],'logic_op': 'or'},
+                'comp_op': "!=", 'values': ['Sediment'], 'logic_op': 'or'},
             {'field': 'biome',  # ontology_has_ancestor validator
-                'comp_op': "==",'values': ['ENVO:00000001'],'logic_op': 'and'},
+                'comp_op': "==", 'values': ['ENVO:00000001'], 'logic_op': 'and'},
             {'field': 'city_township',  # noop validator
-                'comp_op': "IN",'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
+                'comp_op': "IN", 'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
         ])
         self.assertEqual(len(ret), 6)
         # we only expect the number validtor to be transformed
@@ -300,7 +303,7 @@ class sample_search_apiTest(unittest.TestCase):
             {'field': 'longitude', 'comp_op': '>=', 'values': [35], 'logic_op': 'or'},
             {'field': 'sesar:material', 'comp_op': '!=', 'values': ['Sediment'], 'logic_op': 'or'},
             {'field': 'biome', 'comp_op': '==', 'values': ['ENVO:00000001'], 'logic_op': 'and'},
-            {'field': 'city_township', 'comp_op': 'IN', 'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
+            {'field': 'city_township', 'comp_op': 'IN',
+                'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
         ]
         self.assertEqual(ret, expected_ret)
-
