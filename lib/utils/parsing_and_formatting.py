@@ -143,10 +143,8 @@ def parse_comparison_operator(comp_op, idx):
     # remove any trailing and leading whitespace
     comp_op = str(comp_op).strip().upper()
     if comp_op not in AQL_comparison_operators:
-        raise ValueError(f"Input comparison operator in filter condition {idx} must be one "
-                         "of: " + ", ".join([
-                            "\'" + str(term) + "\'" for term in AQL_comparison_operators
-                        ]))
+        raise ValueError(f"Input comparison operator in filter condition {idx} must be one of: "
+                         ", ".join(["'" + str(term) + "'" for term in AQL_comparison_operators]))
     return comp_op
 
 

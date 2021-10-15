@@ -17,7 +17,11 @@ SAMPLE_SAMPLE_COLLECTION = "samples_sample"
 AQL_query_template = f"""
 let version_ids = (for sample_id in @sample_ids
     let doc = DOCUMENT({SAMPLE_SAMPLE_COLLECTION}, sample_id.id)
-    RETURN {{'id': doc.id, 'version_id': doc.vers[sample_id.version - 1], 'version': sample_id.version}}
+    RETURN {{
+        'id': doc.id,
+        'version_id': doc.vers[sample_id.version - 1],
+        'version': sample_id.version
+    }}
 )
 
 let node_metas = (for version_id in version_ids
@@ -27,7 +31,11 @@ let node_metas = (for version_id in version_ids
         let meta_objs_values = (for meta in node.cmeta
             RETURN {{ [ meta.ok ]: {{ [ meta.k ]: meta.v }} }}
         )
-        return {{"id": node.id, "version": node.ver, "meta": APPLY("MERGE_RECURSIVE", meta_objs_values)}}
+        RETURN {{
+            "id": node.id,
+            "version": node.ver,
+            "meta": APPLY("MERGE_RECURSIVE", meta_objs_values)
+        }}
 )
 for node in node_metas
     FILTER """
@@ -99,7 +107,7 @@ class SampleFilterer():
 
     def _validate_filters(self, parsed_filters):
         '''
-        The SampleService will error here if the metadata field 
+        The SampleService will error here if the metadata field
         is not found as an accepted controlled metadata field
         '''
         try:
