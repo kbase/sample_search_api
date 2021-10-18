@@ -2,7 +2,6 @@
 #BEGIN_HEADER
 import logging
 import os
-import json
 
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.SampleServiceClient import SampleService
