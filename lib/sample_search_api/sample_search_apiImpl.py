@@ -15,7 +15,9 @@ class sample_search_api:
     sample_search_api
 
     Module Description:
-    A KBase module: sample_search_api
+    TODO:
+Ontology type queries
+more complex lexicographical queries (nested or paranthesis)
     '''
 
     ######## WARNING FOR GEVENT USERS ####### noqa
@@ -26,7 +28,7 @@ class sample_search_api:
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = ""
-    GIT_COMMIT_HASH = "35ee1b1a52d7e858fe39160d50ed3d43045381a9"
+    GIT_COMMIT_HASH = "13720432d00521cbac3396d743aec3dcfe8135a8"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -53,6 +55,7 @@ class sample_search_api:
         #END_CONSTRUCTOR
         pass
 
+
     def filter_samples(self, ctx, params):
         """
         General sample filtering query
@@ -62,14 +65,17 @@ class sample_search_api:
            be globally unique. Always assigned by the Sample service.),
            parameter "version" of Long, parameter "filter_conditions" of list
            of type "filter_condition" (Args: metadata_field - should only be
-           a controlled_metadata field, if not will error. operator -
-           suppported values for the operators are "==", "!=", "<", ">",
-           ">=", "<=", "in", "not in" metadata_value - value on which to
-           constrain metadata_field with the input operator. join_condition -
-           accepted values for the operators are: "and", "&", "&&" "or", "|",
-           "||") -> structure: parameter "metadata_field" of String,
-           parameter "operator" of String, parameter "metadata_value" of
-           String, parameter "join_condition" of String
+           a controlled_metadata field, if not will error.
+           comparison_operator - suppported values for the operators are
+           "==", "!=", "<", ">", ">=", "<=", "in", "not in" metadata_values -
+           list of values on which to constrain metadata_field with the input
+           operator. logical_operator - accepted values for the operators
+           are: "and", "or" potential future args: paren_position - None - no
+           operation 1 - 2 - add two open paranthesis -1 - -2 - closed
+           paranthesis) -> structure: parameter "metadata_field" of String,
+           parameter "comparison_operator" of String, parameter
+           "metadata_values" of list of String, parameter "logical_operator"
+           of String
         :returns: instance of type "FilterSamplesResults" -> structure:
            parameter "sample_ids" of list of type "SampleAddress" ->
            structure: parameter "id" of type "sample_id" (A Sample ID. Must
@@ -88,7 +94,6 @@ class sample_search_api:
                              'results is not type dict as required.')
         # return the results
         return [results]
-
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",

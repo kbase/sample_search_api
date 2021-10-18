@@ -61,7 +61,7 @@ class SampleFilterer():
             'comp_op': parse_comparison_operator(fc.get('comparison_operator'), idx),
             'logic_op': parse_logical_operator(fc.get('logical_operator'), idx, num_filters)
         } for idx, fc in enumerate(filter_conditions)]
-        formatted_filters = self._validate_filters(parsed_filters)
+        formatted_filters = self._format_and_validate_filters(parsed_filters)
         for idx, formatted_filter in enumerate(formatted_filters):
             query_constraint, filter_params = self._construct_filter(
                 formatted_filter, idx
@@ -105,7 +105,7 @@ class SampleFilterer():
         }
         return AQL_query, filter_params
 
-    def _validate_filters(self, parsed_filters):
+    def _format_and_validate_filters(self, parsed_filters):
         '''
         The SampleService will error here if the metadata field
         is not found as an accepted controlled metadata field
@@ -116,7 +116,7 @@ class SampleFilterer():
                 'keys': set([pf['field'] for pf in parsed_filters])
             })['static_metadata']
         except Exception as error:
-            # may require a better handling.
+            # may require better handling.
             raise ValueError(error.message)
         formatted_filters = []
         for idx, parsed_filter in enumerate(parsed_filters):
