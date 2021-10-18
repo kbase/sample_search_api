@@ -38,23 +38,17 @@ more complex lexicographical queries (nested or paranthesis)
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.callback_url = os.environ['SDK_CALLBACK_URL']
-        re_api_url = config.get(
-          're-api-url',
-          config.get('kbase-endpoint') + '/relation_engine_api'
-        )
+        re_api_url = config.get('re-api-url', config.get('kbase-endpoint') + \
+                                '/relation_engine_api')
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
         self.shared_folder = config['scratch']
         self.sample_service = SampleService(self.sample_url)
-        self.sample_filter = SampleFilterer(
-          config.get('re-admin-token'),
-          re_api_url,
-          self.sample_service
-        )
+        self.sample_filter = SampleFilterer(config.get('re-admin-token'), re_api_url,
+                                            self.sample_service)
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
         #END_CONSTRUCTOR
         pass
-
 
     def filter_samples(self, ctx, params):
         """
@@ -94,6 +88,7 @@ more complex lexicographical queries (nested or paranthesis)
                              'results is not type dict as required.')
         # return the results
         return [results]
+
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
