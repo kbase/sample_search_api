@@ -39,7 +39,7 @@ more complex lexicographical queries (nested or paranthesis)
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
         self.callback_url = os.environ['SDK_CALLBACK_URL']
-        re_api_url = config.get('re-api-url', config.get('kbase-endpoint') + \
+        re_api_url = config.get('re-api-url', config.get('kbase-endpoint') +
                                 '/relation_engine_api')
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
         self.shared_folder = config['scratch']
