@@ -2,7 +2,7 @@ module-name:
     sample_search_api
 
 module-description:
-    A KBase module
+    A KBase service for searching sample data based on values in the samples.
 
 service-language:
     python
@@ -13,3 +13,5 @@ module-version:
 owners:
     [slebras]
 
+service-config:
+    dynamic-service: true
