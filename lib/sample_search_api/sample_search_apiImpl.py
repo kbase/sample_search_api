@@ -2,6 +2,7 @@
 #BEGIN_HEADER
 import logging
 import os
+import json
 
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.SampleServiceClient import SampleService
@@ -43,7 +44,7 @@ more complex lexicographical queries (nested or paranthesis)
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
         self.shared_folder = config['scratch']
         self.sample_service = SampleService(self.sample_url)
-        self.sample_filter = SampleFilterer(config.get('re-admin-token'), re_api_url,
+        self.sample_filter = SampleFilterer(config.get('RE_ADMIN_TOKEN'), re_api_url,
                                             self.sample_service)
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
@@ -79,7 +80,7 @@ more complex lexicographical queries (nested or paranthesis)
         # ctx is the context object
         # return variables are: results
         #BEGIN filter_samples
-        results = self.sample_filter.filter_samples(params)
+        results = self.sample_filter.filter_samples(params, ctx.get('token'))
         #END filter_samples
 
         # At some point might do deeper type checking...

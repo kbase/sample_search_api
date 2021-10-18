@@ -49,7 +49,7 @@ class SampleFilterer():
         cls.sample_service = sample_service
         cls.re_admin_token = re_admin_token
 
-    def filter_samples(self, params):
+    def filter_samples(self, params, user_token):
         samples, filter_conditions = parse_input(params)
         # AQL = Arango Query Languages
         AQL_query = AQL_query_template
@@ -77,10 +77,12 @@ class SampleFilterer():
         AQL_query += """
         RETURN {"id": node.id, "version": node.version}
         """
+        # use the user token if an admin token is not provided
+        run_token = self.re_admin_token if self.re_admin_token else user_token
         results = execute_query(
             AQL_query,
             self.re_api_url,
-            self.re_admin_token,
+            run_token,
             query_params
         )
         return {

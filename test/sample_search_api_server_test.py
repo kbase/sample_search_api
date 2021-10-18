@@ -282,7 +282,7 @@ class sample_search_apiTest(unittest.TestCase):
     def test_static_metadata_validation(self):
         sf = SampleFilterer(self.ctx, self.re_api_url, self.sample_service)
         # here we test the validation functionality
-        ret = sf._validate_filters([
+        ret = sf._format_and_validate_filters([
             {'field': 'name',  # string validator
                 'comp_op': '==', 'values': ['foo'], 'logic_op': 'and'},
             {'field': 'latitude',  # number (float) validator
