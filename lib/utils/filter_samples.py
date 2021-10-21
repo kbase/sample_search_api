@@ -85,10 +85,7 @@ class SampleFilterer():
             run_token,
             query_params
         )
-        return {
-            'sample_ids': results['results'],
-            'query': AQL_query
-        }
+        return {'sample_ids': results['results']}
 
     def _construct_filter(self, formatted_filter, idx):
         '''
