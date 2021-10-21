@@ -129,7 +129,7 @@ class SampleFilterer():
                 err_message = error.message
                 prefix_err_keys = err_message.split(':')[-1]
                 key_set = set([k.strip() for k in err_keys.strip().split(',')]).union(
-                          set([k.strip() for k in prefix_err_keys.strip().split(',')]))
+                    set([k.strip() for k in prefix_err_keys.strip().split(',')]))
                 message = "Unable to resolve metadata fields or prefix metadata fields: " + \
                           ", ".join(list(key_set))
                 raise ValueError(message)
