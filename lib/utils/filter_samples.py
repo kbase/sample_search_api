@@ -95,7 +95,7 @@ class SampleFilterer():
         field = formatted_filter.get('field')
         comp_op = formatted_filter.get('comp_op')
         values = formatted_filter.get('values')
-        AQL_query = f"node.meta.{field}.value {comp_op} @value{idx}"
+        AQL_query = f"node.meta['{field}'].value {comp_op} @value{idx}"
         # if there is one value in the list of values, flatten to just the value.
         if len(values) == 1 and comp_op not in ["IN", "NOT IN"]:
             values = values[0]
