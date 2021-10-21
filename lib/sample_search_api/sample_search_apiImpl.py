@@ -17,7 +17,7 @@ class sample_search_api:
     Module Description:
     TODO:
 Ontology type queries
-more complex lexicographical queries (nested or paranthesis)
+more complex lexicographical queries (nested or parenthesis)
     '''
 
     ######## WARNING FOR GEVENT USERS ####### noqa
@@ -28,7 +28,7 @@ more complex lexicographical queries (nested or paranthesis)
     ######################################### noqa
     VERSION = "0.0.1"
     GIT_URL = ""
-    GIT_COMMIT_HASH = "13720432d00521cbac3396d743aec3dcfe8135a8"
+    GIT_COMMIT_HASH = "ae656a1ecd3504054c263b4d347630ba996066ba"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -37,7 +37,6 @@ more complex lexicographical queries (nested or paranthesis)
     # be found
     def __init__(self, config):
         #BEGIN_CONSTRUCTOR
-        self.callback_url = os.environ['SDK_CALLBACK_URL']
         re_api_url = config.get('re-api-url', config.get('kbase-endpoint') +
                                 '/relation_engine_api')
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
@@ -64,12 +63,12 @@ more complex lexicographical queries (nested or paranthesis)
            "==", "!=", "<", ">", ">=", "<=", "in", "not in" metadata_values -
            list of values on which to constrain metadata_field with the input
            operator. logical_operator - accepted values for the operators
-           are: "and", "or" potential future args: paren_position - None - no
-           operation 1 - 2 - add two open paranthesis -1 - -2 - closed
-           paranthesis) -> structure: parameter "metadata_field" of String,
-           parameter "comparison_operator" of String, parameter
-           "metadata_values" of list of String, parameter "logical_operator"
-           of String
+           are: "and", "or" potential future args: paren_position - None/0 -
+           no operation n - add "n" open parenthesis to the beginning of the
+           statement -n - add "n" closed paranthesis to the end of statement)
+           -> structure: parameter "metadata_field" of String, parameter
+           "comparison_operator" of String, parameter "metadata_values" of
+           list of String, parameter "logical_operator" of String
         :returns: instance of type "FilterSamplesResults" -> structure:
            parameter "sample_ids" of list of type "SampleAddress" ->
            structure: parameter "id" of type "sample_id" (A Sample ID. Must

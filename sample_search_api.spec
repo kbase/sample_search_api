@@ -6,10 +6,9 @@ A KBase module: sample_search_api
 
 TODO:
     Ontology type queries
-    more complex lexicographical queries (nested or paranthesis)
+    more complex lexicographical queries (nested or parenthesis)
 
 */
-
 
 
 module sample_search_api {
@@ -34,11 +33,9 @@ module sample_search_api {
 
     potential future args:
         paren_position -
-            None - no operation
-            1 - 
-            2 - add two open paranthesis
-            -1 - 
-            -2 - closed paranthesis
+            None/0 - no operation
+            n - add "n" open parenthesis to the beginning of the statement
+            -n - add "n" closed paranthesis to the end of statement
     */
 
     typedef structure{

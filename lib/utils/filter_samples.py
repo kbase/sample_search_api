@@ -118,8 +118,21 @@ class SampleFilterer():
                 'keys': set([pf['field'] for pf in parsed_filters])
             })['static_metadata']
         except Exception as error:
-            # may require better handling.
-            raise ValueError(error.message)
+            err_message = error.message
+            err_keys = err_message.split(':')[-1]
+            try:
+                static_metadata = self.sample_service.get_metadata_key_static_metadata({
+                    'prefix': 1,  # assume the ones that failed are prefix validated
+                    'keys': set([pf['field'] for pf in parsed_filters])
+                })['static_metadata']
+            except Exception as error:
+                err_message = error.message
+                prefix_err_keys = err_message.split(':')[-1]
+                key_set = set([k.strip() for k in err_keys.strip().split(',')]).union(
+                          set([k.strip() for k in prefix_err_keys.strip().split(',')]))
+                message = "Unable to resolve metadata fields or prefix metadata fields: " + \
+                          ", ".join(list(key_set))
+                raise ValueError(message)
         formatted_filters = []
         for idx, parsed_filter in enumerate(parsed_filters):
             stat_meta = static_metadata.get(parsed_filter.get('field'))
