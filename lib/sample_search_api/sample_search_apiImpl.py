@@ -42,7 +42,7 @@ more complex lexicographical queries (nested or parenthesis)
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
         self.shared_folder = config['scratch']
         self.sample_service = SampleService(self.sample_url)
-        self.sample_filter = SampleFilterer(config.get('RE_ADMIN_TOKEN'), re_api_url,
+        self.sample_filter = SampleFilterer(config.get('re-admin-token'), re_api_url,
                                             self.sample_service)
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
