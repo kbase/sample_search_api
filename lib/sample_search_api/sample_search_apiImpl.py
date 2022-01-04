@@ -6,6 +6,7 @@ import os
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.SampleServiceClient import SampleService
 from utils.filter_samples import SampleFilterer
+from utils.meta_manager import MetadataManager
 #END_HEADER
 
 
@@ -26,9 +27,9 @@ more complex lexicographical queries (nested or parenthesis)
     # state. A method could easily clobber the state set by another while
     # the latter method is running.
     ######################################### noqa
-    VERSION = "0.0.1"
-    GIT_URL = ""
-    GIT_COMMIT_HASH = "ae656a1ecd3504054c263b4d347630ba996066ba"
+    VERSION = "0.1.0"
+    GIT_URL = "https://github.com/charleshtrenholm/sample_search_api.git"
+    GIT_COMMIT_HASH = "6e628e4c48facab106c772c6341c3404d13f272c"
 
     #BEGIN_CLASS_HEADER
     #END_CLASS_HEADER
@@ -42,12 +43,14 @@ more complex lexicographical queries (nested or parenthesis)
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
         self.shared_folder = config['scratch']
         self.sample_service = SampleService(self.sample_url)
+        self.meta_manager = MetadataManager(config.get('re-admin-token'), re_api_url)
         self.sample_filter = SampleFilterer(config.get('re-admin-token'), re_api_url,
                                             self.sample_service)
         logging.basicConfig(format='%(created)s %(levelname)s: %(message)s',
                             level=logging.INFO)
         #END_CONSTRUCTOR
         pass
+
 
     def filter_samples(self, ctx, params):
         """
@@ -88,6 +91,30 @@ more complex lexicographical queries (nested or parenthesis)
         # return the results
         return [results]
 
+    def get_sampleset_meta(self, ctx, params):
+        """
+        Gets all metadata fields present in a given list of samples. If samples with different custom fields are
+        included, it will return both different fields in an OR style operation. This is intended for use in the 
+        filter_samplesets dynamic dropdown.
+        :param params: instance of type "GetSamplesetMetaParams" ->
+           structure: parameter "sample_ids" of list of type "SampleAddress"
+           -> structure: parameter "id" of type "sample_id" (A Sample ID.
+           Must be globally unique. Always assigned by the Sample service.),
+           parameter "version" of Long
+        :returns: instance of type "GetSamplesetMetaResults" -> structure:
+           parameter "results" of list of String
+        """
+        # ctx is the context object
+        # return variables are: results
+        #BEGIN get_sampleset_meta
+        results = self.meta_manager.get_sampleset_meta(params['sample_ids'], ctx.get('token'))
+        #END get_sampleset_meta
+        # At some point might do deeper type checking...
+        if not isinstance(results, dict):
+            raise ValueError('Method get_sampleset_meta return value ' +
+                             'results is not type dict as required.')
+        # return the results
+        return [results]
     def status(self, ctx):
         #BEGIN_STATUS
         returnVal = {'state': "OK",
