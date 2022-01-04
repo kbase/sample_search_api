@@ -24,6 +24,7 @@ META_AQL_TEMPLATE = f"""
         RETURN UNIQUE(FLATTEN(node_metas))
         """
 
+
 class MetadataManager:
 
     def __init__(cls, re_admin_token, re_api_url):
