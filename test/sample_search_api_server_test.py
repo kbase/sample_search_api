@@ -319,4 +319,3 @@ class sample_search_apiTest(unittest.TestCase):
         self.assertIsInstance(results[0], str)
         # check that all meta field values are unique
         self.assertEqual(len(set(results)), len(results))
-

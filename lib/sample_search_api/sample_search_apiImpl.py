@@ -93,9 +93,9 @@ more complex lexicographical queries (nested or parenthesis)
 
     def get_sampleset_meta(self, ctx, params):
         """
-        Gets all metadata fields present in a given list of samples. If samples with different custom fields are
-        included, it will return both different fields in an OR style operation. This is intended for use in the 
-        filter_samplesets dynamic dropdown.
+        Gets all metadata fields present in a given list of samples. If samples with different
+        custom fields are included, it will return both different fields in an OR style operation.
+        This is intended for use in the filter_samplesets dynamic dropdown.
         :param params: instance of type "GetSamplesetMetaParams" ->
            structure: parameter "sample_ids" of list of type "SampleAddress"
            -> structure: parameter "id" of type "sample_id" (A Sample ID.
