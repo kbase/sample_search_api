@@ -59,4 +59,19 @@ module sample_search_api {
     */
     funcdef filter_samples(FilterSamplesParams params) returns (FilterSamplesResults results) authentication required;
 
+    typedef structure {
+        list<SampleAddress> sample_ids;
+    } GetSamplesetMetaParams;
+
+    typedef structure {
+        list<string> results;
+    } GetSamplesetMetaResults;
+
+
+    /*
+    Gets all metadata fields present in a given list of samples. If samples with different custom fields are
+    included, it will return both different fields in an OR style operation. This is intended for use in the 
+    filter_samplesets dynamic dropdown.
+    */
+    funcdef get_sampleset_meta(GetSamplesetMetaParams params) returns (GetSamplesetMetaResults results) authentication required;
 };

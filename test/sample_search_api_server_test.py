@@ -307,3 +307,15 @@ class sample_search_apiTest(unittest.TestCase):
                 'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
         ]
         self.assertEqual(ret, expected_ret)
+
+    def test_get_sampleset_meta(self):
+        params = {
+            'sample_ids': self.valid_sample_ids
+        }
+        results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]['results']
+
+        self.assertIsInstance(results, list)
+        # check that the results are strings
+        self.assertIsInstance(results[0], str)
+        # check that all meta field values are unique
+        self.assertEqual(len(set(results)), len(results))

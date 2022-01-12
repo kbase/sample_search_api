@@ -342,6 +342,10 @@ class Application(object):
                              name='sample_search_api.filter_samples',
                              types=[dict])
         self.method_authentication['sample_search_api.filter_samples'] = 'required'  # noqa
+        self.rpc_service.add(impl_sample_search_api.get_sampleset_meta,
+                             name='sample_search_api.get_sampleset_meta',
+                             types=[dict])
+        self.method_authentication['sample_search_api.get_sampleset_meta'] = 'required'  # noqa
         self.rpc_service.add(impl_sample_search_api.status,
                              name='sample_search_api.status',
                              types=[dict])
