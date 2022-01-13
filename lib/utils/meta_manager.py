@@ -16,18 +16,20 @@ META_AQL_TEMPLATE = f"""
             for node in {SAMPLE_NODE_COLLECTION}
                 FILTER node.id == version_id.id AND node.uuidver == version_id.version_id
                 LIMIT @num_sample_ids
-                let meta_objs_keys = (FOR meta in node.cmeta
+                let cmeta_keys = (FOR meta IN node.cmeta
                     RETURN meta.ok
                 )
-            RETURN meta_objs_keys
+                let ucmeta_keys = (FOR meta IN node.ucmeta
+                    RETURN CONCAT("custom:", meta.ok)
+                )
+            RETURN APPEND(cmeta_keys, ucmeta_keys)
         )
         RETURN UNIQUE(FLATTEN(node_metas))
         """
 
-
 class MetadataManager:
 
-    def __init__(cls, re_admin_token, re_api_url):
+    def __init__(cls, re_api_url, re_admin_token=None):
         cls.re_api_url = re_api_url
         cls.re_admin_token = re_admin_token
 

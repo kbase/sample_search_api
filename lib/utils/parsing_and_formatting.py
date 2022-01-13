@@ -7,7 +7,8 @@ ACCEPTED_FIELD_TYPE_OPERATOR_PAIRINGS = {
     'string': ["==", "!=", "IN", "NOT IN"],
     'noop': ["==", "!=", "IN", "NOT IN"],
     'enum': ["==", "!=", "IN", "NOT IN"],
-    'ontology': ["==", "!=", "IN", "NOT IN"]
+    'ontology': ["==", "!=", "IN", "NOT IN"],
+    'any': ["==", "!=", "<", ">", ">=", "<=", "IN", "NOT IN"] # for uncontrolled, unvalidated fields
 }
 AQL_one_to_many_value_comparison_operators = {"IN", "NOT IN"}
 AQL_single_value_comparison_operators = {"==", "!=", "<", ">", ">=", "<="}
@@ -76,6 +77,14 @@ def field_value_formatting(parsed_filter, stat_meta, idx):
                                            f"position {idx}, only the following fields are "
                                            f"permitted: {stat_meta['enum']}")
 
+        elif stat_meta.get('type') == 'any':
+            # treat any types as numbers if the value can be cast as a number, otherwise str
+            try:
+                value = int(value)
+            except ValueError:
+                value = float(value)
+            except ValueError:
+                value = str(value)
         elif stat_meta.get('type') in ['ontology', 'noop']:
             # no need to format more here
             value = str(value)
@@ -176,3 +185,10 @@ def parse_logical_operator(logic_op, idx, num_filters):
         raise ValueError(f"Input logical operator in filter condition {idx} must be one of: "
                          ", ".join(["\'" + str(term) + "\'" for term in AQL_logical_operators]))
     return logic_op.upper()
+
+def partition_controlled_parsed_filters(parsed_filters):
+    # separates out controlled parsed_filters from uncontrolled for validation
+    uc_filters = [pf for pf in parsed_filters if pf['field'].startswith('custom:')]
+    c_filters = [cf for cf in parsed_filters if cf not in uc_filters]
+
+    return c_filters, uc_filters
