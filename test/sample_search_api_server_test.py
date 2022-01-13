@@ -59,6 +59,18 @@ class sample_search_apiTest(unittest.TestCase):
             {'id': 'b969c622-ea18-4dda-9943-bf1692e526dd', 'version': 1}
         ]
 
+        # for testing get_sampleset_meta
+        cls.valid_enigma_sample_ids = [
+            {"id": "cb77625e-e6af-4a1e-846a-71788c66904b", 'version': 1},
+            {"id": "70dc08fa-3331-4090-a1ad-79fb872a8082", "version": 1},
+            {"id": "f44b4278-1fc8-4607-aa3e-28652309e290", "version": 1},
+            {"id": "26a758a6-2779-425f-a8d0-e9c6276d3b9f", "version": 1},
+            {"id": "5c587fb6-6510-4e55-8798-5f9504019dfd", "version": 1},
+            {"id": "30c54e60-e598-4d9c-8038-0a0c9c82bb63", "version": 1},
+            {"id": "ed967127-5ba5-4ae6-a062-d566973aa9c3", "version": 1},
+            {"id": "f02a03a7-0e5f-4517-b859-d6061956784f", "version": 1}
+        ]
+
     @classmethod
     def tearDownClass(cls):
         if hasattr(cls, 'wsName'):
@@ -294,7 +306,7 @@ class sample_search_apiTest(unittest.TestCase):
                 'comp_op': "==", 'values': ['ENVO:00000001'], 'logic_op': 'and'},
             {'field': 'city_township',  # noop validator
                 'comp_op': "IN", 'values': ["Barcelona", "Madrid", "Sevilla", "Granada"]}
-        ])
+        ], [], self.ctx['token'])
         self.assertEqual(len(ret), 6)
         # we only expect the number validtor to be transformed
         expected_ret = [
@@ -308,6 +320,7 @@ class sample_search_apiTest(unittest.TestCase):
         ]
         self.assertEqual(ret, expected_ret)
 
+    # @unittest.skip('x')
     def test_get_sampleset_meta(self):
         params = {
             'sample_ids': self.valid_sample_ids
@@ -319,3 +332,92 @@ class sample_search_apiTest(unittest.TestCase):
         self.assertIsInstance(results[0], str)
         # check that all meta field values are unique
         self.assertEqual(len(set(results)), len(results))
+
+        self.assertIn('sesar:igsn', results)
+        self.assertIn('purpose', results)
+
+    # @unittest.skip('x')
+    def test_get_sampleset_meta_uncontrolled_fields(self):
+
+        """
+        Gets uncontrolled meta fields and prepends with "custom:"
+        """
+
+        params = {
+            'sample_ids': self.valid_enigma_sample_ids
+        }
+
+        ret = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]['results']
+
+        custom_fields = [r for r in ret if r.startswith('custom:')]
+
+        self.assertEqual(len(ret), 44)
+        self.assertEqual(len(custom_fields), 6)
+        self.assertIn('custom:adams_nitrate_um', custom_fields)
+        self.assertIn('custom:hazen_n2_mm', custom_fields)
+
+    # @unittest.skip('x')
+    def test_get_sampleset_meta_with_different_sample_columns(self):
+
+        '''
+        test that all metadata columns come back exactly once, regardless of whether
+        they exist in all of the samples queried for
+        '''
+
+        params = {
+            'sample_ids': self.valid_enigma_sample_ids + self.valid_sample_ids
+        }
+
+        results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]['results']
+
+        self.assertEqual(len(set(results)), len(results))
+        # ensure that there are unconrolled meta keys included (even when not included in all samplesets)
+        self.assertIn('custom:hazen_uranium_mg_l', results)
+        self.assertEqual(len(results), 62)
+
+    def test_filter_samples_with_uncontrolled_fields(self):
+        params = {
+            'sample_ids': self.valid_enigma_sample_ids,
+            'filter_conditions': [{
+                'metadata_field': "custom:hazen_n2_mm",
+                'comparison_operator': ">",
+                'metadata_values': ["1"],
+                'logical_operator': "OR"
+            }]
+        }
+        ret = self.serviceImpl.filter_samples(self.ctx, params)
+        self.assertEqual(len(ret[0]['sample_ids']), 3)
+        self.assertEqual(ret[0]['sample_ids'], [
+            {'id': '26a758a6-2779-425f-a8d0-e9c6276d3b9f', 'version': 1},
+            {'id': 'ed967127-5ba5-4ae6-a062-d566973aa9c3', 'version': 1},
+            {'id': 'f02a03a7-0e5f-4517-b859-d6061956784f', 'version': 1}
+        ])
+
+    # @unittest.skip('x')
+    def test_validate_filters_uncontrolled_fields(self):
+
+        """
+        Fails when uncontrolled field prefixed with "custom:" is not resolved
+        """
+
+        sf = SampleFilterer(self.ctx, self.re_api_url, self.sample_service)
+
+        filters = [
+            # controlled field shouldn't throw
+            {'field': 'ph', 'comp_op': '>=', 'values': [7], 'logic_op': 'or'},
+            # uncontrolled field that exists so shouldn't throw
+            {'field': 'custom:hazen_uranium_mg_l', 'comp_op': '>', 'values': ['0'], 'logic_op': 'or'},
+            # field that does not exist on any sampleset should throw
+            {'field': 'custom:AAAAAAA', 'comp_op': '>', 'values': ['0'], 'logic_op': 'or'}
+        ]
+
+        # test 2 different types of samplesets for uncontrolled fields (they should work if theres at least one)
+        test_samples = self.valid_enigma_sample_ids + self.valid_sample_ids
+
+        with self.assertRaises(ValueError) as context:
+            sf._format_and_validate_filters(filters, test_samples, self.ctx['token'])
+
+        self.assertIn('Unable to resolve uncontrolled custom metadata fields:', str(context.exception))
+        self.assertIn('custom:AAAAAAA', str(context.exception))
+        self.assertNotIn('custom:hazen_uranium_mg_l', str(context.exception))
+        self.assertNotIn('ph', str(context.exception))
