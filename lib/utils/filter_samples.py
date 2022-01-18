@@ -6,8 +6,10 @@ from utils.parsing_and_formatting import (
     parse_values,
     parse_comparison_operator,
     parse_logical_operator,
-    field_value_formatting
+    field_value_formatting,
+    partition_controlled_parsed_filters
 )
+from utils.meta_manager import MetadataManager
 
 SAMPLE_NODE_COLLECTION = "samples_nodes"
 SAMPLE_SAMPLE_COLLECTION = "samples_sample"
@@ -28,7 +30,7 @@ let node_metas = (for version_id in version_ids
     for node in {SAMPLE_NODE_COLLECTION}
         FILTER node.id == version_id.id and node.uuidver == version_id.version_id
         LIMIT @num_sample_ids
-        let meta_objs_values = (for meta in node.cmeta
+        let meta_objs_values = (for meta in APPEND(node.cmeta, node.ucmeta)
             RETURN {{ [ meta.ok ]: {{ [ meta.k ]: meta.v }} }}
         )
         RETURN {{
@@ -61,7 +63,10 @@ class SampleFilterer():
             'comp_op': parse_comparison_operator(fc.get('comparison_operator'), idx),
             'logic_op': parse_logical_operator(fc.get('logical_operator'), idx, num_filters)
         } for idx, fc in enumerate(filter_conditions)]
-        formatted_filters = self._format_and_validate_filters(parsed_filters)
+
+        # use the user token if an admin token is not provided
+        run_token = self.re_admin_token if self.re_admin_token else user_token
+        formatted_filters = self._format_and_validate_filters(parsed_filters, samples, run_token)
         for idx, formatted_filter in enumerate(formatted_filters):
             query_constraint, filter_params = self._construct_filter(
                 formatted_filter, idx
@@ -77,8 +82,6 @@ class SampleFilterer():
         AQL_query += """
         RETURN {"id": node.id, "version": node.version}
         """
-        # use the user token if an admin token is not provided
-        run_token = self.re_admin_token if self.re_admin_token else user_token
         results = execute_query(
             AQL_query,
             self.re_api_url,
@@ -93,6 +96,9 @@ class SampleFilterer():
             'field', 'comparison_operator', 'value', 'logical_operator'
         '''
         field = formatted_filter.get('field')
+        if 'custom:' in field:
+            # parse out custom: prefix from uncontrolled fields
+            field = field[len("custom:"):]
         comp_op = formatted_filter.get('comp_op')
         values = formatted_filter.get('values')
         AQL_query = f"node.meta['{field}'].value {comp_op} @value{idx}"
@@ -104,15 +110,16 @@ class SampleFilterer():
         }
         return AQL_query, filter_params
 
-    def _format_and_validate_filters(self, parsed_filters):
+    def _format_and_validate_filters(self, parsed_filters, samples, token):
         '''
         The SampleService will error here if the metadata field
         is not found as an accepted controlled metadata field
         '''
+        c_filters, uc_filters = partition_controlled_parsed_filters(parsed_filters)
         try:
             static_metadata = self.sample_service.get_metadata_key_static_metadata({
                 'prefix': 0,  # expects these not to be prefix validated.
-                'keys': set([pf['field'] for pf in parsed_filters])
+                'keys': set([pf['field'] for pf in c_filters])
             })['static_metadata']
         except Exception as error:
             err_message = error.message
@@ -120,7 +127,7 @@ class SampleFilterer():
             try:
                 static_metadata = self.sample_service.get_metadata_key_static_metadata({
                     'prefix': 1,  # assume the ones that failed are prefix validated
-                    'keys': set([pf['field'] for pf in parsed_filters])
+                    'keys': set([pf['field'] for pf in c_filters])
                 })['static_metadata']
             except Exception as error:
                 err_message = error.message
@@ -130,9 +137,24 @@ class SampleFilterer():
                 message = "Unable to resolve metadata fields or prefix metadata fields: " + \
                           ", ".join(list(key_set))
                 raise ValueError(message)
+
+        # check if there are any bad uncontrolled fields
+        if len(uc_filters):
+            fields = MetadataManager(self.re_api_url).get_sampleset_meta(samples, token)['results']
+            uc_fields = {f['field'] for f in uc_filters}
+            missing_fields = uc_fields.difference(set(fields))
+            if len(missing_fields):
+                message = "Unable to resolve uncontrolled custom metadata fields: " + \
+                    ", ".join(list(missing_fields))
+                raise ValueError(message)
+
+
         formatted_filters = []
         for idx, parsed_filter in enumerate(parsed_filters):
-            stat_meta = static_metadata.get(parsed_filter.get('field'))
+            if parsed_filter.get('field', '').startswith('custom:'):
+                stat_meta = {'type': 'any'}  # no validation for uncontrolled fields
+            else:
+                stat_meta = static_metadata.get(parsed_filter.get('field'))
             formatted_filters.append(
                 field_value_formatting(parsed_filter, stat_meta, idx)
             )
