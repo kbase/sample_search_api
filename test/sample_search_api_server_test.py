@@ -371,7 +371,8 @@ class sample_search_apiTest(unittest.TestCase):
         results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]['results']
 
         self.assertEqual(len(set(results)), len(results))
-        # ensure that there are unconrolled meta keys included (even when not included in all samplesets)
+        # ensure that there are unconrolled meta keys included 
+        # (even when not included in all samplesets)
         self.assertIn('custom:hazen_uranium_mg_l', results)
         self.assertEqual(len(results), 62)
 
@@ -404,20 +405,37 @@ class sample_search_apiTest(unittest.TestCase):
 
         filters = [
             # controlled field shouldn't throw
-            {'field': 'ph', 'comp_op': '>=', 'values': [7], 'logic_op': 'or'},
+            {
+                'field': 'ph',
+                'comp_op': '>=',
+                'values': [7],
+                'logic_op': 'or'
+            },
             # uncontrolled field that exists so shouldn't throw
-            {'field': 'custom:hazen_uranium_mg_l', 'comp_op': '>', 'values': ['0'], 'logic_op': 'or'},
+            {
+                'field': 'custom:hazen_uranium_mg_l',
+                'comp_op': '>',
+                'values': ['0'],
+                'logic_op': 'or'
+            },
             # field that does not exist on any sampleset should throw
-            {'field': 'custom:AAAAAAA', 'comp_op': '>', 'values': ['0'], 'logic_op': 'or'}
+            {
+                'field': 'custom:AAAAAAA',
+                'comp_op': '>',
+                'values': ['0'],
+                'logic_op': 'or'
+            }
         ]
 
-        # test 2 different types of samplesets for uncontrolled fields (they should work if theres at least one)
+        # test 2 different types of samplesets for uncontrolled fields 
+        # (they should work if theres at least one)
         test_samples = self.valid_enigma_sample_ids + self.valid_sample_ids
 
         with self.assertRaises(ValueError) as context:
             sf._format_and_validate_filters(filters, test_samples, self.ctx['token'])
 
-        self.assertIn('Unable to resolve uncontrolled custom metadata fields:', str(context.exception))
+        self.assertIn('Unable to resolve uncontrolled custom metadata fields:',
+                      str(context.exception))
         self.assertIn('custom:AAAAAAA', str(context.exception))
         self.assertNotIn('custom:hazen_uranium_mg_l', str(context.exception))
         self.assertNotIn('ph', str(context.exception))

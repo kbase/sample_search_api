@@ -8,7 +8,8 @@ ACCEPTED_FIELD_TYPE_OPERATOR_PAIRINGS = {
     'noop': ["==", "!=", "IN", "NOT IN"],
     'enum': ["==", "!=", "IN", "NOT IN"],
     'ontology': ["==", "!=", "IN", "NOT IN"],
-    'any': ["==", "!=", "<", ">", ">=", "<=", "IN", "NOT IN"] # for uncontrolled, unvalidated fields
+    # type 'any' for uncontrolled, unvalidated fields
+    'any': ["==", "!=", "<", ">", ">=", "<=", "IN", "NOT IN"]
 }
 AQL_one_to_many_value_comparison_operators = {"IN", "NOT IN"}
 AQL_single_value_comparison_operators = {"==", "!=", "<", ">", ">=", "<="}
@@ -185,6 +186,7 @@ def parse_logical_operator(logic_op, idx, num_filters):
         raise ValueError(f"Input logical operator in filter condition {idx} must be one of: "
                          ", ".join(["\'" + str(term) + "\'" for term in AQL_logical_operators]))
     return logic_op.upper()
+
 
 def partition_controlled_parsed_filters(parsed_filters):
     # separates out controlled parsed_filters from uncontrolled for validation
