@@ -152,7 +152,7 @@ class SampleFilterer():
         formatted_filters = []
         for idx, parsed_filter in enumerate(parsed_filters):
             if parsed_filter.get('field', '').startswith('custom:'):
-                stat_meta = {'type': 'any'} # no validation for uncontrolled fields
+                stat_meta = {'type': 'any'}  # no validation for uncontrolled fields
             else:
                 stat_meta = static_metadata.get(parsed_filter.get('field'))
             formatted_filters.append(
