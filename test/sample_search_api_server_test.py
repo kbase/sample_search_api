@@ -371,7 +371,7 @@ class sample_search_apiTest(unittest.TestCase):
         results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]['results']
 
         self.assertEqual(len(set(results)), len(results))
-        # ensure that there are unconrolled meta keys included 
+        # ensure that there are unconrolled meta keys included
         # (even when not included in all samplesets)
         self.assertIn('custom:hazen_uranium_mg_l', results)
         self.assertEqual(len(results), 62)
@@ -427,7 +427,7 @@ class sample_search_apiTest(unittest.TestCase):
             }
         ]
 
-        # test 2 different types of samplesets for uncontrolled fields 
+        # test 2 different types of samplesets for uncontrolled fields
         # (they should work if theres at least one)
         test_samples = self.valid_enigma_sample_ids + self.valid_sample_ids
 
