@@ -96,7 +96,7 @@ class SampleFilterer():
             'field', 'comparison_operator', 'value', 'logical_operator'
         '''
         field = formatted_filter.get('field')
-        if 'custom:' in field:
+        if field.startswith('custom:'):
             # parse out custom: prefix from uncontrolled fields
             field = field[len("custom:"):]
         comp_op = formatted_filter.get('comp_op')
@@ -114,12 +114,13 @@ class SampleFilterer():
         '''
         The SampleService will error here if the metadata field
         is not found as an accepted controlled metadata field
+        or does not exist in any sample as an uncontrolled field
         '''
-        c_filters, uc_filters = partition_controlled_parsed_filters(parsed_filters)
+        controlled_filters, custom_filters = partition_controlled_parsed_filters(parsed_filters)
         try:
             static_metadata = self.sample_service.get_metadata_key_static_metadata({
                 'prefix': 0,  # expects these not to be prefix validated.
-                'keys': set([pf['field'] for pf in c_filters])
+                'keys': set([pf['field'] for pf in controlled_filters])
             })['static_metadata']
         except Exception as error:
             err_message = error.message
@@ -127,7 +128,7 @@ class SampleFilterer():
             try:
                 static_metadata = self.sample_service.get_metadata_key_static_metadata({
                     'prefix': 1,  # assume the ones that failed are prefix validated
-                    'keys': set([pf['field'] for pf in c_filters])
+                    'keys': set([pf['field'] for pf in controlled_filters])
                 })['static_metadata']
             except Exception as error:
                 err_message = error.message
@@ -139,23 +140,28 @@ class SampleFilterer():
                 raise ValueError(message)
 
         # check if there are any bad uncontrolled fields
-        if len(uc_filters):
-            fields = MetadataManager(self.re_api_url).get_sampleset_meta(samples, token)['results']
-            uc_fields = {f['field'] for f in uc_filters}
-            missing_fields = uc_fields.difference(set(fields))
-            if len(missing_fields):
-                message = "Unable to resolve uncontrolled custom metadata fields: " + \
-                    ", ".join(list(missing_fields))
-                raise ValueError(message)
-
+        if len(custom_filters):
+            self._validate_custom_fields(custom_filters, samples, token)
 
         formatted_filters = []
         for idx, parsed_filter in enumerate(parsed_filters):
-            if parsed_filter.get('field', '').startswith('custom:'):
+            filter_field = parsed_filter.get('field', '')
+            if filter_field.startswith('custom:'):
                 stat_meta = {'type': 'any'}  # no validation for uncontrolled fields
             else:
-                stat_meta = static_metadata.get(parsed_filter.get('field'))
+                stat_meta = static_metadata.get(filter_field)
             formatted_filters.append(
                 field_value_formatting(parsed_filter, stat_meta, idx)
             )
         return formatted_filters
+
+    def _validate_custom_fields(self, custom_filters, samples, token):
+        # get all samples and search for each field in sampleset
+        # if any uncontrolled fields are completely missing from set, throw an error
+        fields = MetadataManager(self.re_api_url).get_sampleset_meta(samples, token)['results']
+        uc_fields = {f['field'] for f in custom_filters}
+        missing_fields = uc_fields.difference(set(fields))
+        if len(missing_fields):
+            message = "Unable to resolve uncontrolled custom metadata fields: " + \
+                ", ".join(list(missing_fields))
+            raise ValueError(message)
