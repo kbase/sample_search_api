@@ -11,7 +11,7 @@ module-version:
     0.1.0
 
 owners:
-    [slebras, dlyon, eapearson]
+    [slebras, dlyon, eapearson, charlie]
 
 service-config:
     dynamic-service: true
