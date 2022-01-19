@@ -190,7 +190,7 @@ def parse_logical_operator(logic_op, idx, num_filters):
 
 def partition_controlled_parsed_filters(parsed_filters):
     # separates out controlled parsed_filters from uncontrolled for validation
-    uc_filters = [pf for pf in parsed_filters if pf['field'].startswith('custom:')]
-    c_filters = [cf for cf in parsed_filters if cf not in uc_filters]
+    custom_filters = [pf for pf in parsed_filters if pf['field'].startswith('custom:')]
+    controlled_filters = [cf for cf in parsed_filters if cf not in custom_filters]
 
-    return c_filters, uc_filters
+    return controlled_filters, custom_filters
