@@ -5,6 +5,8 @@ import os
 
 from installed_clients.KBaseReportClient import KBaseReport
 from installed_clients.SampleServiceClient import SampleService
+from installed_clients.WorkspaceClient import Workspace
+from installed_clients.baseclient import ServerError as WorkspaceError
 from utils.filter_samples import SampleFilterer
 from utils.meta_manager import MetadataManager
 #END_HEADER
@@ -42,6 +44,7 @@ more complex lexicographical queries (nested or parenthesis)
                                 '/relation_engine_api')
         self.sample_url = config.get('kbase-endpoint') + '/sampleservice'
         self.shared_folder = config['scratch']
+        self.ws_url = config.get('workspace-url')
         self.sample_service = SampleService(self.sample_url)
         self.meta_manager = MetadataManager(re_api_url,
                                             re_admin_token=config.get('re-admin-token'))
@@ -98,22 +101,37 @@ more complex lexicographical queries (nested or parenthesis)
         custom fields are included, it will return both different fields in an OR style operation.
         This is intended for use in the filter_samplesets dynamic dropdown.
         :param params: instance of type "GetSamplesetMetaParams" ->
-           structure: parameter "sample_ids" of list of type "SampleAddress"
-           -> structure: parameter "id" of type "sample_id" (A Sample ID.
-           Must be globally unique. Always assigned by the Sample service.),
-           parameter "version" of Long
+           structure: parameter "sample_set_refs" of list of type string.
         :returns: instance of type "GetSamplesetMetaResults" -> structure:
-           parameter "results" of list of String
+           parameter "results" of list of type String
         """
         # ctx is the context object
         # return variables are: results
         #BEGIN get_sampleset_meta
-        results = self.meta_manager.get_sampleset_meta(params['sample_ids'], ctx.get('token'))
+        ws_input = {'objects': [{'ref': o} for o in params.get('sample_set_refs')]}
+        ws = Workspace(self.ws_url, token=ctx.get('token'))
+        try:
+            samples = []
+            for sample_set in ws.get_objects2(ws_input)['data']:
+                samples.extend(sample_set['data']['samples'])
+            sample_ids = [{
+                'id': sample['id'],
+                'version': sample['version']
+            } for sample in samples]
+        except WorkspaceError as e:
+            raise ValueError(
+                f'Bad sampleset ids: {",".join(params.get("sample_set_refs"))}'
+            )
+        except KeyError as e:
+            raise ValueError(
+                f'Invalid sampleset ref - sample in dataset missing the {str(e)} field.'
+            )
+        results = self.meta_manager.get_sampleset_meta(sample_ids, ctx.get('token'))
         #END get_sampleset_meta
         # At some point might do deeper type checking...
-        if not isinstance(results, dict):
+        if not isinstance(results, list):
             raise ValueError('Method get_sampleset_meta return value ' +
-                             'results is not type dict as required.')
+                             'results is not type list as required.')
         # return the results
         return [results]
     def status(self, ctx):
