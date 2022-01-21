@@ -118,7 +118,7 @@ more complex lexicographical queries (nested or parenthesis)
                 'id': sample['id'],
                 'version': sample['version']
             } for sample in samples]
-        except WorkspaceError as e:
+        except WorkspaceError:
             raise ValueError(
                 f'Bad sampleset ids: {",".join(params.get("sample_set_refs"))}'
             )
