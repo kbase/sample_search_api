@@ -158,7 +158,7 @@ class SampleFilterer():
     def _validate_custom_fields(self, custom_filters, samples, token):
         # get all samples and search for each field in sampleset
         # if any uncontrolled fields are completely missing from set, throw an error
-        fields = MetadataManager(self.re_api_url).get_sampleset_meta(samples, token)['results']
+        fields = MetadataManager(self.re_api_url).get_sampleset_meta(samples, token)
         uc_fields = {f['field'] for f in custom_filters}
         missing_fields = uc_fields.difference(set(fields))
         if len(missing_fields):

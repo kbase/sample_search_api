@@ -37,11 +37,11 @@ class MetadataManager:
         # use the user token if an admin token is not provided
         query_params = {"sample_ids": sample_ids, 'num_sample_ids': len(sample_ids)}
         run_token = self.re_admin_token if self.re_admin_token else user_token
-        results = execute_query(
+        ret = execute_query(
             META_AQL_TEMPLATE,
             self.re_api_url,
             run_token,
             query_params
         )
 
-        return {'results': results['results'][0]}
+        return ret['results'][0]
