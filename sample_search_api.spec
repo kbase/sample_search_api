@@ -63,10 +63,14 @@ module sample_search_api {
         list<string> sample_set_refs;
     } GetSamplesetMetaParams;
 
+    typedef structure {
+        string field;
+    } GetSamplesetMetaResult;
+
     /*
     Gets all metadata fields present in a given list of sampleset refs. If samples with different custom fields are
     included, it will return both different fields in an OR style operation. This is intended for use in the 
     filter_samplesets dynamic dropdown.
     */
-    funcdef get_sampleset_meta(GetSamplesetMetaParams params) returns (list<string> results) authentication required;
+    funcdef get_sampleset_meta(GetSamplesetMetaParams params) returns (list<GetSamplesetMetaResult> results) authentication required;
 };

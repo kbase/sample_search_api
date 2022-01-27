@@ -332,15 +332,18 @@ class sample_search_apiTest(unittest.TestCase):
             'sample_set_refs': [self.sampleset_object_ref]
         }
         results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]
+        # get list of unique items to compare length
+        result_fields = {f['field'] for f in results}
 
         self.assertIsInstance(results, list)
-        # check that the results are strings
-        self.assertIsInstance(results[0], str)
+        # check that the results are dicts of strings
+        self.assertIsInstance(results[0], dict)
+        self.assertIsInstance(results[0]['field'], str)
         # check that all meta field values are unique
-        self.assertEqual(len(set(results)), len(results))
+        self.assertEqual(len(result_fields), len(results))
 
-        self.assertIn('sesar:igsn', results)
-        self.assertIn('purpose', results)
+        self.assertIn({'field': 'sesar:igsn'}, results)
+        self.assertIn({'field': 'purpose'}, results)
 
     # @unittest.skip('x')
     def test_get_sampleset_meta_uncontrolled_fields(self):
@@ -355,7 +358,7 @@ class sample_search_apiTest(unittest.TestCase):
 
         ret = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]
 
-        custom_fields = [r for r in ret if r.startswith('custom:')]
+        custom_fields = [r['field'] for r in ret if r['field'].startswith('custom:')]
 
         self.assertEqual(len(ret), 51)
         self.assertEqual(len(custom_fields), 8)
@@ -375,11 +378,13 @@ class sample_search_apiTest(unittest.TestCase):
         }
 
         results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]
+        # convert to set
+        result_fields = {r['field'] for r in results}
 
-        self.assertEqual(len(set(results)), len(results))
+        self.assertEqual(len(result_fields), len(results))
         # ensure that there are unconrolled meta keys included
         # (even when not included in all samplesets)
-        self.assertIn('custom:hazen_uranium_mg_l', results)
+        self.assertIn({'field': 'custom:hazen_uranium_mg_l'}, results)
         self.assertEqual(len(results), 69)
 
     def test_filter_samples_with_uncontrolled_fields(self):
