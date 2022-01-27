@@ -102,8 +102,8 @@ more complex lexicographical queries (nested or parenthesis)
         This is intended for use in the filter_samplesets dynamic dropdown.
         :param params: instance of type "GetSamplesetMetaParams" ->
            structure: parameter "sample_set_refs" of list of type string.
-        :returns: instance of type "GetSamplesetMetaResults" -> structure:
-           parameter "results" of list of type String
+        :returns: list of type "GetSamplesetMetaResult" -> structure:
+           parameter "field" of type "String"
         """
         # ctx is the context object
         # return variables are: results
@@ -126,7 +126,8 @@ more complex lexicographical queries (nested or parenthesis)
             raise ValueError(
                 f'Invalid sampleset ref - sample in dataset missing the {str(e)} field.'
             )
-        results = self.meta_manager.get_sampleset_meta(sample_ids, ctx.get('token'))
+        fields = self.meta_manager.get_sampleset_meta(sample_ids, ctx.get('token'))
+        results = [{'field': f} for f in fields]
         #END get_sampleset_meta
         # At some point might do deeper type checking...
         if not isinstance(results, list):
