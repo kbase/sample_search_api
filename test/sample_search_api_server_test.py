@@ -59,6 +59,9 @@ class sample_search_apiTest(unittest.TestCase):
             {'id': 'b969c622-ea18-4dda-9943-bf1692e526dd', 'version': 1}
         ]
 
+        # corresponding sample set object ref for the above samples
+        cls.sampleset_object_ref = '64822/2/1'
+
         # for testing get_sampleset_meta
         cls.valid_enigma_sample_ids = [
             {"id": "cb77625e-e6af-4a1e-846a-71788c66904b", 'version': 1},
@@ -70,6 +73,9 @@ class sample_search_apiTest(unittest.TestCase):
             {"id": "ed967127-5ba5-4ae6-a062-d566973aa9c3", "version": 1},
             {"id": "f02a03a7-0e5f-4517-b859-d6061956784f", "version": 1}
         ]
+
+        # corresponding sampleset object ref for the above enigma samples
+        cls.enigma_object_ref = '65799/3/2'
 
     @classmethod
     def tearDownClass(cls):
@@ -323,18 +329,21 @@ class sample_search_apiTest(unittest.TestCase):
     # @unittest.skip('x')
     def test_get_sampleset_meta(self):
         params = {
-            'sample_ids': self.valid_sample_ids
+            'sample_set_refs': [self.sampleset_object_ref]
         }
-        results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]['results']
+        results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]
+        # get list of unique items to compare length
+        result_fields = {f['field'] for f in results}
 
         self.assertIsInstance(results, list)
-        # check that the results are strings
-        self.assertIsInstance(results[0], str)
+        # check that the results are dicts of strings
+        self.assertIsInstance(results[0], dict)
+        self.assertIsInstance(results[0]['field'], str)
         # check that all meta field values are unique
-        self.assertEqual(len(set(results)), len(results))
+        self.assertEqual(len(result_fields), len(results))
 
-        self.assertIn('sesar:igsn', results)
-        self.assertIn('purpose', results)
+        self.assertIn({'field': 'sesar:igsn'}, results)
+        self.assertIn({'field': 'purpose'}, results)
 
     # @unittest.skip('x')
     def test_get_sampleset_meta_uncontrolled_fields(self):
@@ -344,15 +353,15 @@ class sample_search_apiTest(unittest.TestCase):
         """
 
         params = {
-            'sample_ids': self.valid_enigma_sample_ids
+            'sample_set_refs': [self.enigma_object_ref]
         }
 
-        ret = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]['results']
+        ret = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]
 
-        custom_fields = [r for r in ret if r.startswith('custom:')]
+        custom_fields = [r['field'] for r in ret if r['field'].startswith('custom:')]
 
-        self.assertEqual(len(ret), 44)
-        self.assertEqual(len(custom_fields), 6)
+        self.assertEqual(len(ret), 51)
+        self.assertEqual(len(custom_fields), 8)
         self.assertIn('custom:adams_nitrate_um', custom_fields)
         self.assertIn('custom:hazen_n2_mm', custom_fields)
 
@@ -365,16 +374,18 @@ class sample_search_apiTest(unittest.TestCase):
         '''
 
         params = {
-            'sample_ids': self.valid_enigma_sample_ids + self.valid_sample_ids
+            'sample_set_refs': [self.sampleset_object_ref, self.enigma_object_ref]
         }
 
-        results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]['results']
+        results = self.serviceImpl.get_sampleset_meta(self.ctx, params)[0]
+        # convert to set
+        result_fields = {r['field'] for r in results}
 
-        self.assertEqual(len(set(results)), len(results))
+        self.assertEqual(len(result_fields), len(results))
         # ensure that there are unconrolled meta keys included
         # (even when not included in all samplesets)
-        self.assertIn('custom:hazen_uranium_mg_l', results)
-        self.assertEqual(len(results), 62)
+        self.assertIn({'field': 'custom:hazen_uranium_mg_l'}, results)
+        self.assertEqual(len(results), 69)
 
     def test_filter_samples_with_uncontrolled_fields(self):
         params = {
