@@ -110,18 +110,27 @@ more complex lexicographical queries (nested or parenthesis)
         #BEGIN get_sampleset_meta
         ws_input = {'objects': [{'ref': o} for o in params.get('sample_set_refs')]}
         ws = Workspace(self.ws_url, token=ctx.get('token'))
+
+        try:
+            sample_sets = ws.get_objects2(ws_input)['data']
+        except WorkspaceError as e:
+            raise ValueError(
+                f'Bad sampleset ids: {",".join(params.get("sample_set_refs"))}'
+            )
+
+        # check first if a list of metadata keys exist in actual sample set object
+        # to save the trip of a potentially large AQL query
+        if all('metadata_keys' in s['data'] for s in sample_sets):
+            keys_set = [set(s['data']['metadata_keys']) for s in sample_sets]
+            return [{'field': f} for f in set().union(*keys_set)]
         try:
             samples = []
-            for sample_set in ws.get_objects2(ws_input)['data']:
+            for sample_set in sample_sets:
                 samples.extend(sample_set['data']['samples'])
             sample_ids = [{
                 'id': sample['id'],
                 'version': sample['version']
             } for sample in samples]
-        except WorkspaceError as e:
-            raise ValueError(
-                f'Bad sampleset ids: {",".join(params.get("sample_set_refs"))}'
-            )
         except KeyError as e:
             raise ValueError(
                 f'Invalid sampleset ref - sample in dataset missing the {str(e)} field.'
