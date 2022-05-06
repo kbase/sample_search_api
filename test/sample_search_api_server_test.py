@@ -101,7 +101,7 @@ class sample_search_apiTest(unittest.TestCase):
         )[0]
         end = time.time()
         self.assertEqual(len(ret['sample_ids']), 7)
-        self.assertEqual(ret['sample_ids'], self.valid_sample_ids)
+        self.assertCountEqual(ret['sample_ids'], self.valid_sample_ids)
 
     # @unittest.skip('x')
     def test_multi_condition_filter_from_same_sample_set(self):
@@ -136,7 +136,7 @@ class sample_search_apiTest(unittest.TestCase):
         )[0]
         end = time.time()
         self.assertEqual(len(ret['sample_ids']), 4)
-        self.assertEqual([{"id": s['id'], "version": s['version']} for s in ret['sample_ids']], [
+        self.assertCountEqual([{"id": s['id'], "version": s['version']} for s in ret['sample_ids']], [
             {'id': 'c9daec72-348e-426b-bef6-04bcdd0e01fa', 'version': 1},
             {'id': 'efffc90e-64bb-48fb-97c9-c2db3f37f7fc', 'version': 1},
             {'id': '3d108e8a-d583-4aa4-a2b8-0ae592abf066', 'version': 1},
